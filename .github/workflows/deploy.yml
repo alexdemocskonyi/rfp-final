@@ -1,0 +1,52 @@
+name: CI/CD for RFP-AI Backend
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install deps
+        run: npm ci || npm install
+
+      - name: Verify environment
+        run: |
+          echo "🔍 Checking API keys..."
+          declare -A VARS=(
+            ["OPENAI_API_KEY"]="${{ secrets.OPENAI_API_KEY }}"
+            ["SUPABASE_URL"]="${{ secrets.SUPABASE_URL }}"
+            ["SUPABASE_SERVICE_ROLE_KEY"]="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+            ["VERCEL_TOKEN"]="${{ secrets.VERCEL_TOKEN }}"
+            ["VERCEL_ORG_ID"]="${{ secrets.VERCEL_ORG_ID }}"
+            ["VERCEL_PROJECT_ID"]="${{ secrets.VERCEL_PROJECT_ID }}"
+          )
+          missing=0
+          for k in "${!VARS[@]}"; do
+            if [ -z "${VARS[$k]}" ]; then
+              echo "❌ Missing secret: $k"
+              missing=1
+            else
+              echo "✅ $k found"
+            fi
+          done
+          if [ $missing -eq 1 ]; then
+            echo "❌ One or more required secrets are missing."
+            exit 1
+          fi
+          echo "✅ All environment secrets available."
+
+      - name: Build project
+        run: echo "Building..." && sleep 3 && echo "✅ Build success (placeholder)"
+

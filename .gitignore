@@ -1,0 +1,11 @@
+# build & deps
+.next/
+node_modules/
+# env & local files
+.env*
+*.local
+.DS_Store
+.vercel
+
+.env*
+!.env.example
